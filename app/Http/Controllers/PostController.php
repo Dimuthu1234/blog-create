@@ -8,32 +8,27 @@ use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
-//    public function __construct()
-//    {
-//        $this->middleware('auth');
-//    }
-
     /**
      * Display a listing of the resource.
-     *
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function search(Request $request)
     {
         try {
-            $posts = (new Post)
-                ->newQuery();
-            $posts->orWhere('title', 'like', '%' . $request['search'] . '%');
-            $posts->orWhere('description','like', '%' . $request['search'] . '%');
+            $posts = Post::with(['comments' => function ($query) use ($request) {
+                $query->orderBy('created_at', 'asc');
+            }])->orWhereHas('comments', function ($query) use ($request) {
+                $query->where('comment', 'like', '%' . $request['search'] . '%');
+            })->orWhere('title', 'like', '%' . $request['search'] . '%')
+                ->orWhere('description', 'like', '%' . $request['search'] . '%')
+                ->get();
+            if (count($posts) > 0)
+                return response()->json($posts, 200);
 
-            $postsArr = [];
-            foreach ($posts->get() as $post){
-                $postsArr[] = ['post' => $post, 'comments' => $post->comments];
-            }
-
-            return response()->json($postsArr, 200);
-        }catch (\Exception $exception){
-            return [$exception->getMessage()];
+                return response()->json(['message' => 'Post content could not found!'], 204);
+        } catch (\Exception $exception) {
+            return response()->json($exception->getMessage(), 500);
         }
     }
 
@@ -55,77 +50,30 @@ class PostController extends Controller
      */
     public function getAllPost()
     {
-        $postsArr = [];
-        $posts = (new Post)->newQuery();
-        foreach ($posts->get() as $post){
-            $postsArr[] = ['post' => $post, 'comments' => $post->comments];
+        try {
+            $posts = Post::with(['comments' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            }])->get();
+            return response()->json($posts, 200);
+        } catch (\Exception $exception) {
+            return response()->json($exception->getMessage(), 500);
         }
-        return response()->json($postsArr, 200);
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
+     * Display a listing of the resource.
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function getPostByID(Request $request)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Post $post)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Post $post)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Post $post)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Post $post)
-    {
-        //
+        try {
+            $posts = Post::with(['comments' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            }])->where('id', '=', $request['post_id'])->first();
+            return response()->json($posts, 200);
+        } catch (\Exception $exception) {
+            return response()->json($exception->getMessage(), 500);
+        }
     }
 }

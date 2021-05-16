@@ -12,29 +12,8 @@
             </div>
         </form>
 
-        <div v-for="record in postRecords" v-bind:key="record.post.id">
-            <div class="card" style="margin-top: 50px">
-                <div class="card-header">{{ record.post.title }}</div>
-                <div class="card-body">
-                    <p>{{ record.post.description }}</p>
-                </div>
-                <div class="row">
-                    <div class="col-md-10 offset-1 comment">
-                        <div v-for="comment in record.comments" v-bind:key="comment.id">
-                            <p>{{ comment.comment }}</p>
-                        </div>
-                        <form @submit.prevent="addComment(record.post.id)">
-                            <input type="hidden" name="post_id" v-model="record.post.id">
-                            <textarea class="form-control" name="comment" style="margin-bottom: 20px"
-                                      placeholder="Comments here...." v-if="record.post.id"
-                                      v-model="write.comment"></textarea>
-                            <button type="submit" class="float-right btn btn-sm btn-primary"
-                                    style="margin-bottom: 20px">Submit
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <div v-for="record in postRecords" v-bind:key="record.id">
+            <post-component v-bind:post="record"></post-component>
         </div>
     </div>
 
@@ -49,7 +28,6 @@
                 write: {
                     comment: ''
                 },
-                pagination: {},
             }
         },
 
@@ -102,7 +80,7 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                        let vm = this;
+                        console.log(data)
                         this.postRecords = data;
                     })
                     .catch(err => console.log(err));

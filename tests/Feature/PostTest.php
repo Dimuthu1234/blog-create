@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Comment;
+use App\Post;
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -15,23 +17,18 @@ class PostTest extends TestCase
      *
      * @return void
      */
-//    public function testExample()
-//    {
-//        $response = $this->get('/');
-//
-//        $response->assertStatus(200);
-//    }
-
-    /**
-     * A basic feature test example.
-     *
-     * @return void
-     */
     public function testSearch()
     {
         $user = User::first();
         $this->actingAs($user);
-        $response = $this->call('post', '/post/search');
+
+        $post = Post::create([
+            'title' => 'dimuthu search test',
+            'description' => 'this is the description'
+        ]);
+        $comment = new Comment(['comment' => 'test comment dimuthu']);
+        $post->comments()->save($comment);
+        $response = $this->post('/post/search', ['search' => 'dimu']);
         $response->assertStatus(200);
     }
 }
